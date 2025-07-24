@@ -1,0 +1,1166 @@
+# Guide Complet des APIs Witti_Witti pour Postman
+## Documentation Technique avec Exemples Concrets
+
+---
+
+## 📋 Table des matières
+
+1. [Configuration de base](#configuration-de-base)
+2. [Authentification](#authentification)
+3. [Profil Client](#profil-client)
+4. [Récompenses et Achats](#récompenses-et-achats)
+5. [FAQ](#faq)
+6. [Sondages](#sondages)
+7. [Support](#support)
+8. [Administration](#administration)
+9. [Configuration Postman](#configuration-postman)
+10. [Codes d'erreur](#codes-derreur)
+11. [Ordre de test recommandé](#ordre-de-test-recommandé)
+
+---
+
+## 🔧 Configuration de base
+
+**URL de base :** `http://10.125.30.8`
+
+**Headers communs :**
+```
+Content-Type: application/json
+Authorization: Bearer {token} (après connexion)
+```
+
+---
+
+## 🔐 1. AUTHENTIFICATION
+
+### 1.1 Connexion Utilisateur Client
+
+**Endpoint :** `POST /accounts/login`
+
+**Headers :**
+```
+Content-Type: application/json
+```
+
+**Body (JSON) :**
+```json
+{
+    "identifiant": "123456",
+    "password": "123456"
+}
+```
+
+**Réponse attendue :**
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMDAwMDAwMCwianRpIjoiYjJkYzE5YzEtYzE5Yy0xMWVlLWE5YzAtYzE5YzE5YzE5YzE5YyIsInR5cGUiOiJhY2Nlc3MiLCJzdWIiOiJ1c2VyX3Rlc3QiLCJuYmYiOjE3MzAwMDAwMDAsImNzcmYiOiI5YzE5YzE5YzE5YzE5YzE5YzE5YzE5YzE5YzE5YzE5YzE5YzE5YyJ9.abc123..."
+}
+```
+
+**Exemple avec données réelles :**
+- **Identifiant :** `123456`
+- **Mot de passe :** `123456`
+- **Client associé :** User Test (500 jetons, catégorie Executive)
+
+### 1.2 Connexion Administrateur
+
+**Endpoint :** `POST /accounts/admin/login`
+
+**Headers :**
+```
+Content-Type: application/json
+```
+
+**Body (JSON) :**
+```json
+{
+    "email": "superadmin@gmail.com",
+    "password": "123456"
+}
+```
+
+**Réponse attendue :**
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "role": "super_admin",
+    "name": "Super Admin",
+    "email": "superadmin@gmail.com"
+}
+```
+
+**Exemple avec données réelles :**
+- **Email :** `superadmin@gmail.com`
+- **Mot de passe :** `123456`
+- **Rôle :** Super administrateur (10000 jetons, catégorie First Class)
+
+### 1.3 Déconnexion Utilisateur
+
+**Endpoint :** `POST /customer/logout`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Déconnexion réussie"
+}
+```
+
+### 1.4 Déconnexion Administrateur
+
+**Endpoint :** `POST /admin/logout`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Déconnexion réussie"
+}
+```
+
+---
+
+## 👤 2. PROFIL CLIENT
+
+### 2.1 Tableau de bord client
+
+**Endpoint :** `GET /customer/{customer_code}/dashboard`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Exemple d'URL :** `GET /customer/user_test/dashboard`
+
+**Réponse attendue :**
+```json
+{
+    "category": "Executive",
+    "jetons": 500,
+    "percentage": 44.44,
+    "short_name": "Test",
+    "tokens_to_next_tier": 500,
+    "last_transactions": [
+        {
+            "date": "2025-06-23",
+            "amount": "200",
+            "type": "Bonus fidélité"
+        },
+        {
+            "date": "2025-06-25",
+            "amount": "100",
+            "type": "Achat carte cadeau"
+        },
+        {
+            "date": "2025-06-27",
+            "amount": "50",
+            "type": "Achat carte cadeau"
+        }
+    ]
+}
+```
+
+**Explication des données :**
+- **Client :** User Test
+- **Catégorie :** Executive (100-999 jetons)
+- **Jetons actuels :** 500
+- **Pourcentage dans la catégorie :** 44.44% (500 jetons sur 900 possibles)
+- **Jetons pour le niveau suivant :** 500 (pour atteindre Executive+)
+
+### 2.2 Profil client détaillé
+
+**Endpoint :** `GET /customer/{customer_code}/profile`
+
+**Exemple d'URL :** `GET /customer/user_test/profile`
+
+**Réponse attendue :**
+```json
+{
+    "first_name": "User",
+    "short_name": "Test",
+    "agency": "RGK",
+    "jetons": 500,
+    "category": "Executive",
+    "percentage": 44.44,
+    "tokens_to_next_tier": 500
+}
+```
+
+### 2.3 Historique des transactions
+
+**Endpoint :** `GET /customer/{customer_code}/transactions`
+
+**Paramètres optionnels :**
+- `period`: `week`, `month`, `year`
+- `start_date`: `2025-06-01`
+- `end_date`: `2025-06-30`
+
+**Exemple d'URL :** `GET /customer/user_test/transactions?period=month`
+
+**Réponse attendue :**
+```json
+{
+    "transactions": [
+        {
+            "date": "2025-06-27",
+            "amount": "200",
+            "type": "Bonus fidélité"
+        },
+        {
+            "date": "2025-06-25",
+            "amount": "100",
+            "type": "Achat carte cadeau"
+        },
+        {
+            "date": "2025-06-23",
+            "amount": "50",
+            "type": "Achat carte cadeau"
+        }
+    ],
+    "total_transactions": 3,
+    "period_start": "2025-06-01",
+    "period_end": "2025-06-30",
+    "trends": {
+        "deposit_percentage": 33.33,
+        "withdrawal_percentage": 66.67
+    }
+}
+```
+
+### 2.4 Notifications client
+
+**Endpoint :** `GET /customer/{customer_code}/notifications`
+
+**Exemple d'URL :** `GET /customer/user_test/notifications`
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Notifications récupérées avec succès",
+    "notifications": [
+        {
+            "id": 1,
+            "message": "Bienvenue sur la plateforme MyWitti !",
+            "created_at": "2025-06-21 10:00:00"
+        },
+        {
+            "id": 2,
+            "message": "Votre commande #123 a été validée",
+            "created_at": "2025-06-26 14:30:00"
+        }
+    ]
+}
+```
+
+---
+
+## 🎁 3. RÉCOMPENSES ET ACHATS
+
+### 3.1 Liste des récompenses disponibles
+
+**Endpoint :** `GET /lot/rewards`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+[
+    {
+        "id": 1,
+        "title": "Carte cadeau 5000 FCFA",
+        "tokens_required": 50,
+        "image_url": "/static/uploads/gift-card.jpg",
+        "category": "Eco Premium",
+        "quantity_available": 100
+    },
+    {
+        "id": 2,
+        "title": "Carte cadeau 10000 FCFA",
+        "tokens_required": 100,
+        "image_url": "/static/uploads/gift-card.jpg",
+        "category": "Executive",
+        "quantity_available": 50
+    },
+    {
+        "id": 3,
+        "title": "Smartphone Samsung",
+        "tokens_required": 1500,
+        "image_url": "/static/uploads/smartphone.jpg",
+        "category": "Executive +",
+        "quantity_available": 10
+    },
+    {
+        "id": 4,
+        "title": "Voyage à Paris",
+        "tokens_required": 5000,
+        "image_url": "/static/uploads/paris.jpg",
+        "category": "First Class",
+        "quantity_available": 2
+    }
+]
+```
+
+**Explication des récompenses :**
+- **Carte cadeau 5000 FCFA :** 50 jetons (accessible à tous)
+- **Carte cadeau 10000 FCFA :** 100 jetons (Executive minimum)
+- **Smartphone Samsung :** 1500 jetons (Executive+ minimum)
+- **Voyage à Paris :** 5000 jetons (First Class minimum)
+
+### 3.2 Ajouter/Retirer des favoris
+
+**Endpoint :** `POST /lot/rewards/{reward_id}/favorite`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Exemple d'URL :** `POST /lot/rewards/1/favorite`
+
+**Body (JSON) :**
+```json
+{}
+```
+
+**Réponse attendue (ajout) :**
+```json
+{
+    "msg": "Récompense ajoutée aux favoris"
+}
+```
+
+**Réponse attendue (retrait) :**
+```json
+{
+    "msg": "Récompense retirée des favoris"
+}
+```
+
+### 3.3 Liste des favoris
+
+**Endpoint :** `GET /lot/favorites`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "count": 2,
+    "items": [
+        {
+            "id": 1,
+            "title": "Carte cadeau 5000 FCFA",
+            "tokens_required": 50,
+            "category": "Eco Premium",
+            "image_url": "/static/uploads/gift-card.jpg"
+        },
+        {
+            "id": 2,
+            "title": "Carte cadeau 10000 FCFA",
+            "tokens_required": 100,
+            "category": "Executive",
+            "image_url": "/static/uploads/gift-card.jpg"
+        }
+    ]
+}
+```
+
+### 3.4 Ajouter au panier
+
+**Endpoint :** `POST /lot/cart`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body (JSON) :**
+```json
+{
+    "reward_id": 1,
+    "quantity": 2
+}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Carte cadeau 5000 FCFA ajoutée au panier",
+    "quantity": 2,
+    "total_tokens": 100
+}
+```
+
+### 3.5 Voir le panier
+
+**Endpoint :** `GET /lot/cart`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "jetons_disponibles": 500,
+    "jetons_requis": 100,
+    "achat_possible": true,
+    "transactions": [
+        {
+            "id": 1,
+            "title": "Carte cadeau 5000 FCFA",
+            "quantity": 2,
+            "tokens_required_per_item": 50,
+            "total_tokens": 100,
+            "image_url": "/static/uploads/gift-card.jpg",
+            "transaction_id": "550e8400-e29b-41d4-a716-446655440000"
+        }
+    ],
+    "notifications": []
+}
+```
+
+**Explication :**
+- **Jetons disponibles :** 500 (solde du client)
+- **Jetons requis :** 100 (2 × 50 jetons)
+- **Achat possible :** true (500 ≥ 100)
+
+### 3.6 Passer une commande
+
+**Endpoint :** `POST /lot/place-order`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body (JSON) :**
+```json
+{}
+```
+
+**Réponse attendue :**
+```json
+{
+    "id": "order-550e8400-e29b-41d4-a716-446655440000",
+    "customer": "User Test",
+    "contact": "N/A",
+    "date": "2025-06-28",
+    "heure": "14:30:00",
+    "amount": 100,
+    "items": [
+        {
+            "reward_id": 1,
+            "title": "Carte cadeau 5000 FCFA",
+            "tokens_required_per_item": 50,
+            "total_tokens": 100,
+            "image_url": "/static/uploads/gift-card.jpg"
+        }
+    ]
+}
+```
+
+**Résultat de la commande :**
+- **Nouveau solde client :** 400 jetons (500 - 100)
+- **Statut de la commande :** "pending" (en attente de validation admin)
+- **Notification créée :** "Commande passée avec succès pour 100 jetons (en attente de validation)."
+
+---
+
+## 📋 4. FAQ
+
+### 4.1 Liste des FAQ
+
+**Endpoint :** `GET /faq`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "FAQ récupérées avec succès",
+    "faqs": [
+        {
+            "id": 1,
+            "question": "Comment fonctionne le système de jetons ?",
+            "answer": "Les jetons sont des points que vous gagnez en utilisant nos services. Vous pouvez les échanger contre des récompenses."
+        },
+        {
+            "id": 2,
+            "question": "Comment passer une commande ?",
+            "answer": "Allez dans la section \"Lots\" et sélectionnez l'article de votre choix. Ajoutez-le au panier et validez votre commande."
+        },
+        {
+            "id": 3,
+            "question": "Comment contacter le support ?",
+            "answer": "Vous pouvez nous contacter via l'onglet \"Support\" ou par téléphone au +2250710922213."
+        }
+    ]
+}
+```
+
+---
+
+## 📊 5. SONDAGES
+
+### 5.1 Liste des sondages actifs
+
+**Endpoint :** `GET /survey/surveys`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Sondages récupérés avec succès",
+    "surveys": [
+        {
+            "id": 1,
+            "title": "Satisfaction générale",
+            "description": "Comment évaluez-vous votre expérience sur notre plateforme ?",
+            "is_active": true,
+            "options": [
+                {
+                    "id": 1,
+                    "option_text": "Très mal",
+                    "option_value": 1
+                },
+                {
+                    "id": 2,
+                    "option_text": "Mal",
+                    "option_value": 2
+                },
+                {
+                    "id": 3,
+                    "option_text": "Moyen",
+                    "option_value": 3
+                },
+                {
+                    "id": 4,
+                    "option_text": "Bien",
+                    "option_value": 4
+                },
+                {
+                    "id": 5,
+                    "option_text": "Très bien",
+                    "option_value": 5
+                }
+            ]
+        }
+    ]
+}
+```
+
+### 5.2 Répondre à un sondage
+
+**Endpoint :** `POST /survey/surveys/{survey_id}/respond`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Exemple d'URL :** `POST /survey/surveys/1/respond`
+
+**Body (JSON) :**
+```json
+{
+    "option_id": 5
+}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Réponse enregistrée avec succès",
+    "survey_id": 1,
+    "option_selected": "Très bien"
+}
+```
+
+---
+
+## 🆘 6. SUPPORT
+
+### 6.1 Informations de contact
+
+**Endpoint :** `GET /support/contact`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "phone": "+2250710922213",
+    "whatsapp": "+2250710922213",
+    "email": "misterjohn0798@gmail.com",
+    "default_message": "Bonjour, j'ai besoin d'aide avec l'application."
+}
+```
+
+### 6.2 Créer une demande de support
+
+**Endpoint :** `POST /support/request`
+
+**Headers :**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body (JSON) :**
+```json
+{
+    "subject": "Problème de connexion",
+    "description": "Je n'arrive pas à me connecter à mon compte depuis hier",
+    "request_type": "Assistance"
+}
+```
+
+**Types de demande autorisés :**
+- `Reclamation`
+- `Assistance`
+- `Autre`
+
+**Réponse attendue :**
+```json
+{
+    "message": "Demande de support créée avec succès",
+    "request_id": 1
+}
+```
+
+---
+
+## 👨‍💼 7. ADMINISTRATION
+
+### 7.1 Profil administrateur
+
+**Endpoint :** `GET /admin/profile`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "id": 1,
+    "first_name": "Super",
+    "last_name": "Admin",
+    "email": "superadmin@gmail.com",
+    "user_id": "superadmin",
+    "is_admin": true,
+    "is_superuser": true,
+    "date_joined": "2025-01-01 00:00:00",
+    "last_login": "2025-06-28 14:30:00"
+}
+```
+
+### 7.2 Liste des clients
+
+**Endpoint :** `GET /admin/customers`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Clients récupérés avec succès",
+    "customers": [
+        {
+            "id": 1,
+            "customer_code": "superadmin",
+            "first_name": "Super",
+            "short_name": "Admin",
+            "jetons": 10000,
+            "category": "First Class",
+            "phone_number": "+2250710922213",
+            "date_ouverture": "2025-01-01"
+        },
+        {
+            "id": 2,
+            "customer_code": "user_test",
+            "first_name": "User",
+            "short_name": "Test",
+            "jetons": 500,
+            "category": "Executive",
+            "phone_number": "+22501234567",
+            "date_ouverture": "2025-01-01"
+        }
+    ]
+}
+```
+
+### 7.3 Liste des commandes
+
+**Endpoint :** `GET /admin/orders`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Commandes récupérées avec succès",
+    "orders": [
+        {
+            "id": "order-550e8400-e29b-41d4-a716-446655440000",
+            "customer": "User Test",
+            "date": "2025-06-28",
+            "heure": "14:30:00",
+            "amount": 100,
+            "status": "pending",
+            "items": [
+                {
+                    "reward_id": 1,
+                    "title": "Carte cadeau 5000 FCFA",
+                    "tokens_required_per_item": 50,
+                    "total_tokens": 100
+                }
+            ]
+        }
+    ]
+}
+```
+
+### 7.4 Valider une commande
+
+**Endpoint :** `PUT /admin/orders/{order_id}/validate`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+```
+
+**Exemple d'URL :** `PUT /admin/orders/order-550e8400-e29b-41d4-a716-446655440000/validate`
+
+**Body (JSON) :**
+```json
+{
+    "admin_notes": "Commande validée et expédiée"
+}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Commande validée avec succès",
+    "order_id": "order-550e8400-e29b-41d4-a716-446655440000",
+    "status": "validated"
+}
+```
+
+### 7.5 Annuler une commande
+
+**Endpoint :** `PUT /admin/orders/{order_id}/cancel`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+```
+
+**Body (JSON) :**
+```json
+{
+    "reason": "Stock insuffisant"
+}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Commande annulée avec succès",
+    "order_id": "order-550e8400-e29b-41d4-a716-446655440000",
+    "status": "cancelled",
+    "refunded_tokens": 100
+}
+```
+
+### 7.6 Gestion du stock
+
+**Endpoint :** `GET /admin/stock`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Stock récupéré avec succès",
+    "stock": [
+        {
+            "id": 1,
+            "title": "Carte cadeau 5000 FCFA",
+            "current_stock": 100,
+            "category": "Eco Premium",
+            "jetons_required": 50
+        },
+        {
+            "id": 2,
+            "title": "Carte cadeau 10000 FCFA",
+            "current_stock": 50,
+            "category": "Executive",
+            "jetons_required": 100
+        },
+        {
+            "id": 3,
+            "title": "Smartphone Samsung",
+            "current_stock": 10,
+            "category": "Executive +",
+            "jetons_required": 1500
+        },
+        {
+            "id": 4,
+            "title": "Voyage à Paris",
+            "current_stock": 2,
+            "category": "First Class",
+            "jetons_required": 5000
+        }
+    ]
+}
+```
+
+### 7.7 Statistiques
+
+**Endpoint :** `GET /admin/stats`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Statistiques récupérées avec succès",
+    "stats": {
+        "total_customers": 2,
+        "total_orders": 1,
+        "total_revenue_tokens": 100,
+        "pending_orders": 1,
+        "validated_orders": 0,
+        "cancelled_orders": 0,
+        "top_categories": [
+            {
+                "category": "Executive",
+                "orders_count": 1,
+                "total_tokens": 100
+            }
+        ],
+        "recent_activity": [
+            {
+                "date": "2025-06-28",
+                "action": "Nouvelle commande",
+                "customer": "User Test",
+                "amount": 100
+            }
+        ]
+    }
+}
+```
+
+### 7.8 Demandes de support
+
+**Endpoint :** `GET /admin/support-requests`
+
+**Headers :**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Réponse attendue :**
+```json
+{
+    "msg": "Demandes de support récupérées avec succès",
+    "requests": [
+        {
+            "id": 1,
+            "subject": "Problème de connexion",
+            "description": "Je n'arrive pas à me connecter à mon compte depuis hier",
+            "request_type": "Assistance",
+            "status": "Pending",
+            "customer": "User Test",
+            "created_at": "2025-06-28 15:00:00"
+        }
+    ]
+}
+```
+
+---
+
+## ⚙️ Configuration Postman
+
+### 1. Variables d'environnement
+
+Créez un environnement avec ces variables :
+
+| Variable | Valeur initiale | Description |
+|----------|----------------|-------------|
+| `base_url` | `http://127.0.0.1:5000` | URL de base de l'API |
+| `user_token` | (vide) | Token JWT pour l'utilisateur client |
+| `admin_token` | (vide) | Token JWT pour l'administrateur |
+| `customer_code` | `user_test` | Code client pour les tests |
+
+### 2. Collection Postman
+
+Organisez vos requêtes en collections :
+
+#### Collection "Auth"
+- Login Utilisateur
+- Login Admin
+- Logout Utilisateur
+- Logout Admin
+
+#### Collection "Customer"
+- Dashboard Client
+- Profil Client
+- Transactions Client
+- Notifications Client
+
+#### Collection "Rewards"
+- Liste des Récompenses
+- Ajouter aux Favoris
+- Liste des Favoris
+- Ajouter au Panier
+- Voir le Panier
+- Passer une Commande
+
+#### Collection "Support"
+- Contact Support
+- Créer Demande Support
+
+#### Collection "Admin"
+- Profil Admin
+- Liste Clients
+- Liste Commandes
+- Valider Commande
+- Annuler Commande
+- Gestion Stock
+- Statistiques
+- Demandes Support
+
+### 3. Tests automatiques
+
+#### Test pour login utilisateur
+```javascript
+if (pm.response.code === 200) {
+    const response = pm.response.json();
+    pm.environment.set("user_token", response.access_token);
+    console.log("Token utilisateur sauvegardé");
+}
+```
+
+#### Test pour login admin
+```javascript
+if (pm.response.code === 200) {
+    const response = pm.response.json();
+    pm.environment.set("admin_token", response.access_token);
+    console.log("Token admin sauvegardé");
+}
+```
+
+#### Test de validation de réponse
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has required fields", function () {
+    const response = pm.response.json();
+    pm.expect(response).to.have.property('msg');
+});
+```
+
+---
+
+## 🚨 Codes d'erreur courants
+
+| Code | Signification | Exemple |
+|------|---------------|---------|
+| **200** | Succès | Requête traitée avec succès |
+| **201** | Créé | Nouvelle ressource créée |
+| **400** | Données invalides | `{"message": "ID de récompense et quantité valides requis"}` |
+| **401** | Non authentifié | `{"message": "Invalid identifiant or password"}` |
+| **403** | Accès interdit | `{"message": "Access denied: You can only access your own dashboard"}` |
+| **404** | Ressource non trouvée | `{"message": "Customer not found"}` |
+| **500** | Erreur serveur | `{"error": "Internal server error"}` |
+
+### Exemples d'erreurs courantes
+
+#### Erreur 401 - Authentification échouée
+```json
+{
+    "message": "Invalid identifiant or password"
+}
+```
+
+#### Erreur 403 - Accès interdit
+```json
+{
+    "message": "Access denied: You can only access your own dashboard"
+}
+```
+
+#### Erreur 400 - Données invalides
+```json
+{
+    "message": "ID de récompense et quantité valides requis"
+}
+```
+
+---
+
+## 📝 Ordre de test recommandé
+
+### Phase 1 : Configuration et Authentification
+1. **Login utilisateur** (`user_test` / `123456`) → Sauvegarder le token
+2. **Login admin** (`superadmin@gmail.com` / `123456`) → Sauvegarder le token admin
+
+### Phase 2 : Tests Client
+3. **Profil client** → Vérifier les données (500 jetons, Executive)
+4. **Dashboard client** → Vérifier les statistiques
+5. **Transactions client** → Vérifier l'historique
+6. **Notifications client** → Vérifier les messages
+
+### Phase 3 : Tests Récompenses
+7. **Liste des récompenses** → Voir les 4 récompenses disponibles
+8. **Ajouter aux favoris** → Tester avec la carte cadeau 5000 FCFA
+9. **Liste des favoris** → Vérifier l'ajout
+10. **Ajouter au panier** → Tester avec 2 cartes cadeaux 5000 FCFA
+11. **Voir le panier** → Vérifier le calcul (100 jetons requis)
+12. **Passer une commande** → Tester l'achat
+
+### Phase 4 : Tests Support et FAQ
+13. **FAQ** → Vérifier les 3 questions/réponses
+14. **Contact support** → Vérifier les informations
+15. **Créer demande support** → Tester la création
+
+### Phase 5 : Tests Sondages
+16. **Liste des sondages** → Vérifier le sondage "Satisfaction générale"
+17. **Répondre au sondage** → Tester avec l'option "Très bien"
+
+### Phase 6 : Tests Administration
+18. **Profil admin** → Vérifier les données superadmin
+19. **Liste des clients** → Vérifier les 2 clients
+20. **Liste des commandes** → Vérifier la commande en attente
+21. **Valider une commande** → Tester la validation
+22. **Gestion du stock** → Vérifier les 4 produits
+23. **Statistiques** → Vérifier les métriques
+24. **Demandes de support** → Vérifier les demandes
+
+### Phase 7 : Nettoyage
+25. **Logout utilisateur** → Nettoyer la session
+26. **Logout admin** → Nettoyer la session admin
+
+---
+
+## 📊 Données de test disponibles
+
+### Utilisateurs de test
+| Type | Identifiant | Email | Mot de passe | Jetons | Catégorie |
+|------|-------------|-------|--------------|--------|-----------|
+| **Client** | `user_test` | `user_test@gmail.com` | `123456` | 500 | Executive |
+| **Admin** | `superadmin` | `superadmin@gmail.com` | `123456` | 10000 | First Class |
+
+### Récompenses disponibles
+| ID | Titre | Jetons | Catégorie | Stock |
+|----|-------|--------|-----------|-------|
+| 1 | Carte cadeau 5000 FCFA | 50 | Eco Premium | 100 |
+| 2 | Carte cadeau 10000 FCFA | 100 | Executive | 50 |
+| 3 | Smartphone Samsung | 1500 | Executive + | 10 |
+| 4 | Voyage à Paris | 5000 | First Class | 2 |
+
+### Transactions de test
+- **User Test :** 3 transactions (2 achats + 1 bonus)
+- **Superadmin :** 3 transactions (2 achats + 1 bonus)
+
+### Notifications de test
+- **User Test :** 2 notifications
+- **Superadmin :** 3 notifications
+
+### FAQ de test
+- 3 questions/réponses sur le fonctionnement
+
+### Sondage de test
+- "Satisfaction générale" avec 5 options (1-5)
+
+---
+
+## 🎯 Conseils pour les tests
+
+### 1. Testez les cas limites
+- **Jetons insuffisants :** Essayez d'acheter le voyage à Paris (5000 jetons) avec user_test (500 jetons)
+- **Stock insuffisant :** Essayez d'acheter plus que le stock disponible
+- **Données invalides :** Envoyez des données manquantes ou incorrectes
+
+### 2. Vérifiez les autorisations
+- **Client vs Admin :** Testez les routes admin avec un token client
+- **Accès croisé :** Essayez d'accéder aux données d'un autre client
+
+### 3. Testez les workflows complets
+- **Achat complet :** Login → Ajouter au panier → Commander → Validation admin
+- **Support complet :** Créer demande → Vérifier en admin
+
+### 4. Surveillez les logs
+- Vérifiez les logs de l'application pour les erreurs
+- Surveillez les modifications en base de données
+
+---
+
+## 📞 Support technique
+
+En cas de problème lors des tests :
+
+1. **Vérifiez la connexion :** `http://127.0.0.1:5000`
+2. **Vérifiez les logs :** Console Flask
+3. **Vérifiez la base :** Données de test présentes
+4. **Vérifiez les tokens :** Validité et expiration
+
+**Contact :** `misterjohn0798@gmail.com`
+**Téléphone :** `+2250710922213`
+
+---
+
+*Document généré le 28 juin 2025*
+*Version : 1.0*
+*Application : Witti_Witti API* 

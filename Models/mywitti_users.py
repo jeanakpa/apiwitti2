@@ -1,6 +1,8 @@
+#Models/mywitti_users.py
+
 from extensions import db
 from datetime import datetime
-from werkzeug.security import check_password_hash
+import bcrypt
 from sqlalchemy import Index, CheckConstraint
 
 class MyWittiUser(db.Model):
@@ -29,17 +31,15 @@ class MyWittiUser(db.Model):
     user_type_id = db.Column(db.Integer, db.ForeignKey('mywitti_user_type.id'))
     email = db.Column(db.String(255))
     user_type_rel = db.relationship('MyWittiUserType', backref='users')
-    
+
     def check_password(self, password):
-        """Vérifie si le mot de passe fourni correspond au hash stocké"""
-        return check_password_hash(self.password, password)
-    
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
+
     @property
     def is_admin(self):
         """Retourne True si l'utilisateur est un admin"""
-        return self.user_type in ['admin', 'superadmin'] or self.is_staff
-    
+
     @property
     def is_superuser(self):
         """Retourne True si l'utilisateur est un super admin"""
-        return self.user_type == 'superadmin' 
+        return self.user_type == 'superadmin'

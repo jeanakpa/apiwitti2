@@ -12,7 +12,7 @@ class Config:
         raise ValueError("JWT_SECRET_KEY environment variable is required")
     
     # Configuration de la base de données
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://postgres:mywitti@localhost:5432/mywitti'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configuration JWT

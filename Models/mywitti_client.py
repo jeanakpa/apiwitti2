@@ -1,3 +1,5 @@
+#Models/mywitti_client.py
+
 from extensions import db
 from sqlalchemy import Index
 from datetime import date
@@ -34,4 +36,4 @@ class MyWittiClient(db.Model):
     jetons_transaction = db.Column(db.BigInteger, default=0)
     jetons_stabilite = db.Column(db.BigInteger, default=0)
     category = db.relationship('MyWittiCategory', backref='clients')
-    user = db.relationship('MyWittiUser', backref='clients') 
+    user = db.relationship('MyWittiUser', backref='clients')
